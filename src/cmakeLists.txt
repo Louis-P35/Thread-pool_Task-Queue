@@ -1,0 +1,63 @@
+# src/CMakeLists.txt
+
+# Enable/disable building a library
+option(BUILD_LIBRARY "Enable building of the library target" OFF)
+
+# Collect source files for the library
+# It's a good practice not to use file(GLOB ...) for production builds, 
+# but explicitly list files.
+set(SRC_FILES
+    main.cpp
+    orchestrator.cpp
+    taskQueue.cpp
+)
+
+set(HEADER_FILES
+    ${CMAKE_SOURCE_DIR}/src/orchestrator.hpp
+    ${CMAKE_SOURCE_DIR}/src/taskQueue.hpp
+
+)
+
+
+if (${BUILD_LIBRARY})
+    # Create a library target from these sources
+    # Can choose STATIC, SHARED, or INTERFACE depending on needs.
+    add_library(${LIB_NAME} STATIC ${SRC_FILES} ${HEADER_FILES})
+
+    # Ensure the library has access to the public headers
+    target_include_directories(${LIB_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+endif()
+
+# Generate executable file
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${HEADER_FILES})
+
+# Link external dependencies
+target_link_libraries(${PROJECT_NAME})
+
+# Add include directory
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+
+# Set compile options, features, or properties:
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+if (MSVC)
+    # For Visual Studio, use /W4 to have high warnings
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+else()
+    # For GCC/Clang, use -Wall -Wextra -pedantic
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
+endif()
+
+if (${BUILD_LIBRARY})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIB_NAME})
+
+    # Set compile options, features, or properties:
+    target_compile_features(LIB_NAME PUBLIC cxx_std_20)
+    if (MSVC)
+        # For Visual Studio, use /W4 to have high warnings
+        target_compile_options(LIB_NAME PRIVATE /W4)
+    else()
+        # For GCC/Clang, use -Wall -Wextra -pedantic
+        target_compile_options(LIB_NAME PRIVATE -Wall -Wextra -pedantic)
+    endif()
+endif()
